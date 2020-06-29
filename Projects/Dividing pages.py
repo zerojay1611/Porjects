@@ -5,42 +5,27 @@ def loss(p):
         s_ += (avg - p[i])**2
     
     return s_
+def making_lists(d_, l):
+    lists_ = l[:]
+    lists_[d_] += 1
+    lists_[len(lists_) - 1] -= 1
 
-def simulation(d_, i_, j_, go):
-    page = pages[:]
+    return lists_
+def simulation(l):
+    lists_ = l[:]
+    pages_ = [0] * days
+    strs_ = [''] * days
+    tmp = 0
 
-    if go:
-        page[d_] += result[i_][j_]
-    else:
-        page.append(0)
-        d_ += 1
+    for i in range(len(lists_)):
+        for j in range(lists_[i]):
+            pages_[i] += flatten_result[tmp]
+            strs_[i] += flatten_strs[tmp] + ' '
+            tmp += 1
 
-        page[d_] += result[i_][j_]
-        j_ += 1
+    return loss(pages_), pages_, strs_
 
-    while i_ < len(result):
 
-        if i_ != 0:
-            j_ = 0
-        while j_ < len(result[i_]):
-            if result[i_][j_] == -1:
-                break
-            
-            p_ = page[:]
-            p_[d_] += result[i_][j_]
-
-            if loss(p_) < loss(page):
-                page[d_] += result[i_][j_]
-            elif d_ < (days - 1):
-                page.append(0)
-                d_ += 1
-
-                page[d_] += result[i_][j_]
-            
-            j_ += 1
-        i_ += 1
-    
-    return page
 
 
 #입력데이터
@@ -62,7 +47,7 @@ for i in range(len(data)):
         
         if j != (len(data[i]) - 1) and data[i][j+1] != -1:  #마지막 열이 아니고 그다음이 -1이 아니면
             result[i][j] = data[i][j+1] - (data[i][j] - 1)
-        elif i != (len(data) - 1) and (j == (len(data[i]) - 1) or data[i][j+1] == -1):  #다음 행이 있고 마지막 열이 아거나 다음 데이터가 -1이면
+        elif i != (len(data) - 1) and (j == (len(data[i]) - 1) or data[i][j+1] == -1):  #다음 행이 있고 마지막 열이 이거나 다음 데이터가 -1이면
             result[i][j] = data[i+1][0] - (data[i][j] - 1)
             
 if -1 in data[len(data)-1]:  #마지막 -1로
@@ -73,75 +58,63 @@ else:
 #페이지 숫자 출력
 print(result)
 
+
+#평탄화, 페이지 합 구하기
+length = 0
+flatten_result = []
+flatten_strs = []
+sum_ = 0
+
+for i in range(len(result)):
+    for j in range(len(result[i])):
+        if result[i][j] == -1:
+            break
+        
+        length += 1
+        flatten_result.append(result[i][j])
+        flatten_strs.append(str(i+1) + '-' + str(j+1))
+        sum_ += result[i][j]
+
 #페이지 나누기
 days = int(input('days : '))
-
-sum_ = 0        #페이지 합 구하기
-for i in range(len(data)):
-    for j in range(len(data[0])):
-        if result[i][j] != -1:
-            sum_ += result[i][j]
 avg = sum_ / days
 
-pages = [0]
-strs = ['']
+
+#lists 초기화
+lists = []
+for i in range(days):
+    if i != (days - 1):
+        lists.append(1)
+    else:
+        lists.append(len(flatten_result) - days + 1)
+loss_tmp, pages, strs = simulation(lists)
 d = 0
 
-#시뮬레이션 방법
-for i in range(len(data)):
-    for j in range(len(data[0])):   #지금과 늘리기 후를 (평균*지금날짜)를 기준으로 비교하고 늘리거나 통과
-        if result[i][j] == -1:
-            break
+#데이터 구하기
+for count in range(len(flatten_result)):
+    lists_tmp = making_lists(d, lists)
+    loss_new, pages_new, strs_new = simulation(lists_tmp)
+    if loss_tmp > loss_new:
+        pages, strs = pages_new[:], strs_new[:]
+        loss_tmp = loss_new
+        lists = lists_tmp
+    else:
+        d += 1
 
-        pages_ = pages[:]       #pages_ = pages 이렇게 하면 메모리 포인터 자체가 복사됨
-        pages_[d] += result[i][j]
-
-        if pages[d] != 0 and loss(simulation(d, i, j, True)) < loss(simulation(d, i, j, False)):
-            pages[d] += result[i][j]
-            strs[d] += str(i+1) + '-' + str(j+1) +  ' '
-        elif pages[d] == 0:
-            pages[d] += result[i][j]
-            strs[d] += str(i+1) + '-' + str(j+1) +  ' '
-        elif d < (days - 1):
-            pages.append(0)
-            strs.append('')
-            d += 1
-
-            pages[d] += result[i][j]
-            strs[d] += str(i+1) + '-' + str(j+1) +  ' '
-
-#기본 방법
-
-pages_b = [0]
-strs_b = ['']
-d_b = 0
-
-for i in range(len(data)):
-    for j in range(len(data[0])):   #지금과 늘리기 후를 (평균*지금날짜)를 기준으로 비교하고 늘리거나 통과
-        if result[i][j] == -1:
-            break
-
-        pages_ = pages_b[:]       #pages_ = pages 이렇게 하면 메모리 포인터 자체가 복사됨
-        pages_[d_b] += result[i][j]
-
-        if pages_b[d_b] != 0 and loss(pages_) < loss(pages_b):
-            pages_b[d_b] += result[i][j]
-            strs_b[d_b] += str(i+1) + '-' + str(j+1) +  ' '
-        elif pages_b[d_b] == 0:
-            pages_b[d_b] += result[i][j]
-            strs_b[d_b] += str(i+1) + '-' + str(j+1) +  ' '
-        elif d_b < (days - 1):
-            pages_b.append(0)
-            strs_b.append('')
-            d_b += 1
-
-            pages_b[d_b] += result[i][j]
-            strs_b[d_b] += str(i+1) + '-' + str(j+1) +  ' '
+print(pages)
+print(strs)
 
 
-if loss(pages_b) < loss(pages):
-    print(pages_b)
-    print(strs_b)
-else:
-    print(pages)
-    print(strs)
+
+
+
+
+
+
+'''
+평탄화
+자연수 분할
+분할을 순열화(https://alwaysemmyhope.com/ko/python/684260-get-all-permutations-of-a-numpy-array-python-numpy.html)
+
+전체 페이지 숫자 분할(1, 1, 1, 1, 1) + 마지막에 남은거전부다
+'''

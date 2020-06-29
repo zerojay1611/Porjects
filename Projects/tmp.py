@@ -1,10 +1,22 @@
-def loss(p):
+def loss(day, p):
     s_ = 0
 
     for i in range(len(p)):     #sigma(avg - p)**2
         s_ += (avg - p[i])**2
-    
+
     return s_
+'''
+def simulation(page, i, j, go):
+    tmp_i = i
+    tmp_j = j
+    while i < len(result):
+        while j < len(result[i]):
+            if result[i][j] == -1:
+                break
+            if tmp_i == i and tmp_j == j and go:
+                page[d] += result[i][j]
+    '''        
+
 
 data = [[11, 12, -1, -1, -1, -1, -1, -1, -1, -1, -1], 
 [15, 18, 24, 26, 37, 44, 64, 65, 68, 71, 76], 
@@ -21,12 +33,12 @@ for i in range(len(data)):
     for j in range(len(data[i])):
         if data[i][j] == -1:
             break
-        
+
         if j != (len(data[i]) - 1) and data[i][j+1] != -1:  #마지막 열이 아니고 그다음이 -1이 아니면
             result[i][j] = data[i][j+1] - (data[i][j] - 1)
         elif i != (len(data) - 1) and (j == (len(data[i]) - 1) or data[i][j+1] == -1):  #다음 행이 있고 마지막 열이 아거나 다음 데이터가 -1이면
             result[i][j] = data[i+1][0] - (data[i][j] - 1)
-            
+
 if -1 in data[len(data)-1]:  #마지막 -1로
     result[len(data)-1][data[len(data)-1].index(-1)-1] = -1
 else:
@@ -57,10 +69,10 @@ for i in range(len(data)):
         pages_ = pages[:]       #pages_ = pages 이렇게 하면 메모리 포인터 자체가 복사됨
         pages_[d] += result[i][j]
 
-        if loss(pages_) < loss(pages):
+        if loss(d+1, pages_) < loss(d+1, pages):
             pages[d] += result[i][j]
             strs[d] += str(i+1) + '-' + str(j+1) +  ' '
-        elif d < (days-1):
+        elif d <= days:
             pages.append(0)
             strs.append('')
             d += 1
@@ -70,13 +82,3 @@ for i in range(len(data)):
 
 print(pages)
 print(strs)
-
-#tmp
-basic7 = [61, 51, 49, 53, 50, 53, 41]
-sim7 = [61, 45, 51, 57, 50, 53, 41]
-sim8 = [40, 41, 42, 44, 47, 50, 53, 41]
-
-
-print(loss(1, sim7))
-print(loss(0, basic7))
-print(loss(0, sim8))
